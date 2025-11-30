@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Email</title>
+</head>
+<body>
+    <h1>🔧 Test Configuration Email</h1>
+
+    <button onclick="testEmailConfig()">Vérifier Configuration</button>
+    <button onclick="sendTestEmail()">Envoyer Email Test</button>
+    <button onclick="testAlerts()">Tester Alertes</button>
+
+    <div id="result" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;"></div>
+
+    <script>
+        async function testEmailConfig() {
+            const response = await fetch('/api/test/email/config');
+            const result = await response.text();
+            document.getElementById('result').innerHTML = '<pre>' + result + '</pre>';
+        }
+
+        async function sendTestEmail() {
+            try {
+                const response = await fetch('/api/test/email', {
+                    method: 'POST'
+                });
+                const result = await response.text();
+                document.getElementById('result').innerHTML = '<pre style="color: green;">' + result + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<pre style="color: red;">Erreur: ' + error + '</pre>';
+            }
+        }
+
+        async function testAlerts() {
+            try {
+                const response = await fetch('/api/alertes/test-email', {
+                    method: 'POST'
+                });
+                const result = await response.text();
+                document.getElementById('result').innerHTML = '<pre style="color: blue;">' + result + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<pre style="color: red;">Erreur: ' + error + '</pre>';
+            }
+        }
+    </script>
+</body>
+</html>

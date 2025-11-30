@@ -1,0 +1,191 @@
+spring:
+  application:
+    name: machine-monitor
+    version: 1.0.0
+
+  profiles:
+    active: dev
+    include: security,monitoring
+
+  # Configuration par défaut (commun à tous les environnements)
+  datasource:
+    url: jdbc:mysql://localhost:3306/machine_monitor?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true&autoReconnect=true&serverTimezone=Europe/Paris
+    username: monitor_user
+    password: Monitor123!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      auto-commit: false
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        connection:
+          provider_disables_autocommit: true
+        jdbc:
+          batch_size: 20
+        order_updates: true
+        order_inserts: true
+
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+    web:
+      resources:
+        static-locations: classpath:/static/
+
+  transaction:
+    default-timeout: 30
+    rollback-on-commit-failure: true
+
+  # === NOUVELLE CONFIGURATION EMAIL ===
+  mail:
+    host: smtp.ethereal.email
+    port: 587
+    username: ben.fahey@ethereal.email
+    password: YcpjMswFg2uZ4vGbPy
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+        debug: false
+
+# === CONFIGURATION CHROME DEVTOOLS ===
+app:
+  chrome-devtools:
+    enabled: true
+    environment: dev
+    web-url: http://localhost:8080
+
+  # Configuration existante ALERTES
+  alert:
+    seuil-disponibilite: 80.0
+    emails-destinataires: "ben.fahey@ethereal.email"
+    rapport-heure: 8
+
+  monitoring:
+    intervalle-verification: "0 */30 * * * *"
+    timeout-test: 5000
+
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,info,prometheus
+      base-path: /monitoring
+    enabled-by-default: true
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    prometheus:
+      enabled: true
+    info:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+    enable:
+      jvm: true
+      system: true
+      logback: true
+
+# INFO ENDPOINT CONFIGURATION
+info:
+  app:
+    name: "${spring.application.name}"
+    version: "${spring.application.version}"
+    description: "Système de monitoring des machines et caisses"
+  environment: "${spring.profiles.active}"
+  contact:
+    email: "support@company.com"
+    team: "DevOps"
+
+logging:
+  level:
+    org.springframework: INFO
+    org.springframework.security: DEBUG
+    org.springframework.transaction: TRACE
+    org.springframework.orm.jpa: DEBUG
+    com.example.monitor: INFO
+    com.example.monitor.service.EmailService: DEBUG
+    # Logs Chrome DevTools
+    com.esm.machineMonitor.controller.ChromeDevToolsController: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+
+  cache:
+    type: none
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    com.example.monitor: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+
+  cache:
+    type: caffeine
+
+logging:
+  level:
+    com.example.monitor: INFO
+    org.hibernate.SQL: WARN

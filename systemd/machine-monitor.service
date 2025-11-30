@@ -1,0 +1,22 @@
+# /etc/systemd/system/machine-monitor.service
+[Unit]
+Description=Machine Monitor Application
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=monitor
+Group=monitor
+WorkingDirectory=/opt/machine-monitor
+ExecStart=/usr/bin/java \
+    -Dspring.profiles.active=prod \
+    -XX:+UseG1GC \
+    -XX:MaxRAMPercentage=75.0 \
+    -jar machine-monitor-1.0.0.jar
+SuccessExitStatus=143
+Restart=always
+RestartSec=30
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  machine-monitor:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      
+      # Chrome DevTools - NOUVEAU
+      - APP_CHROME_DEVTOOLS_ENABLED=true
+      - APP_CHROME_DEVTOOLS_ENVIRONMENT=production
+      - APP_CHROME_DEVTOOLS_WEB_URL=https://machine-monitor.votre-domaine.com
+      
+      # Configuration existante
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - API_KEY=${API_KEY}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/machine_monitor
+      - SPRING_DATASOURCE_USERNAME=monitor_user
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      
+      # Variables supplémentaires pour Chrome DevTools
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus,metrics
+      - LOGGING_LEVEL_COM_EXAMPLE_MONITOR_CONTROLLER_CHROMEDEVTOOLSCONTROLLER=DEBUG
+      
+    volumes:
+      - ../logs:/app/logs
+      - ../reports:/app/reports
+      - ./config:/app/config
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/monitoring/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  mysql:
+    image: mysql:8.0
+    container_name: machine-monitor-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=machine_monitor
+      - MYSQL_USER=monitor_user
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../scripts/setup-database.sql:/docker-entrypoint-initdb.d/01-setup.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: machine-monitor-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ../prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    depends_on:
+      - machine-monitor
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: machine-monitor-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ../grafana/datasources:/etc/grafana/provisioning/datasources
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+volumes:
+  mysql_data:
+  prometheus_data:
+  grafana_data:

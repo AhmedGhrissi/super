@@ -1,0 +1,334 @@
+spring:
+  application:
+    name: machine-monitor
+    version: 1.0.0
+
+  profiles:
+    active: prod
+
+  # Configuration PRODUCTION - Variables d'environnement
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:machine_monitor}?useUnicode=true&characterEncoding=UTF-8&useSSL=true&verifyServerCertificate=false&allowPublicKeyRetrieval=true&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&serverTimezone=Europe/Paris
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      auto-commit: false
+      connection-timeout: 30000
+      maximum-pool-size: 20
+      minimum-idle: 5
+      max-lifetime: 300000
+      idle-timeout: 60000
+      connection-test-query: SELECT 1
+      leak-detection-threshold: 60000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # ⚠️ JAMAIS 'create' ou 'update' en prod !
+    show-sql: false       # ⚠️ DÉSACTIVER en prod
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: false
+        connection:
+          provider_disables_autocommit: true
+        jdbc:
+          batch_size: 30
+        order_updates: true
+        order_inserts: true
+        # Optimisations prod
+        generate_statistics: false
+        jdbc.batch_versioned_data: true
+        connection.pool_size: 20
+
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+    web:
+      resources:
+        static-locations: classpath:/static/
+        cache:
+          period: 31536000  # Cache 1 an pour les statics
+
+  transaction:
+    default-timeout: 30
+    rollback-on-commit-failure: true
+
+  # SÉCURITÉ RENFORCÉE
+  security:
+    oauth2:
+      client:
+        registration:
+          # Configurer selon l'environnement
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+
+  # CACHE PRODUCTION
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=30m
+
+  # MAIL PRODUCTION
+  mail:
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+  # TASK EXECUTION PROD
+  task:
+    execution:
+      pool:
+        core-size: 10
+        max-size: 20
+        queue-capacity: 100
+    scheduling:
+      pool:
+        size: 5
+
+# === CONFIGURATION CHROME DEVTOOLS PRODUCTION ===
+app:
+  chrome-devtools:
+    enabled: true
+    environment: production
+    web-url: ${APP_WEB_URL:https://machine-monitor.votre-domaine.com}
+
+  # Configuration monitoring
+  monitoring:
+    test-interval: 1  # ⚠️ Plus fréquent en prod
+    http-timeout: 15000
+    retry-attempts: 2  # ⚠️ Moins de tentatives
+    retry-delay: 10
+
+  # Configuration sécurité
+  security:
+    jwt-expiration: 8  # ⚠️ Durée plus courte
+    jwt-secret: ${JWT_SECRET:}  # ⚠️ OBLIGATOIRE en prod
+
+  # Configuration reporting
+  reporting:
+    auto-generate: true
+    generation-interval: 24
+    retention-days: 90  # ⚠️ Conservation plus longue
+
+  # Configuration notifications
+  notifications:
+    enabled: true
+    types: [ "EMAIL", "SLACK", "WEBHOOK" ]
+    alert-threshold: 5  # ⚠️ Seuil plus sensible
+
+  # Configuration monitoring externe
+  external-monitoring:
+    datadog:
+      enabled: ${DATADOG_ENABLED:false}
+      api-key: ${DATADOG_API_KEY:}
+    newrelic:
+      enabled: ${NEWRELIC_ENABLED:false}
+      license-key: ${NEWRELIC_LICENSE_KEY:}
+
+# SERVER PRODUCTION
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+    session:
+      timeout: 30m
+      cookie:
+        secure: true
+        http-only: true
+        same-site: strict
+    context-path: ${SERVER_CONTEXT_PATH:/monitor}
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/octet-stream
+    min-response-size: 1024
+  # Headers de sécurité
+  forward-headers-strategy: framework
+  tomcat:
+    max-threads: 100
+    min-spare-threads: 10
+    max-connections: 10000
+    connection-timeout: 10000
+    # Protection contre les attaques
+    max-http-post-size: 10MB
+    max-swallow-size: 10MB
+    # Headers sécurité
+    remote-ip-header: X-Forwarded-For
+    protocol-header: X-Forwarded-Proto
+
+# MANAGEMENT & MONITORING PRODUCTION
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics  # ⚠️ Limiter l'exposition
+      base-path: /internal/monitoring  # ⚠️ Chemin sécurisé
+      path-mapping:
+        prometheus: metrics/prometheus
+    enabled-by-default: false  # ⚠️ Désactiver par défaut
+    jmx:
+      exposure:
+        include: health,metrics
+      enabled: false  # ⚠️ Désactiver JMX si pas utilisé
+
+  endpoint:
+    health:
+      show-details: when-authorized  # ⚠️ Ne pas tout montrer
+      show-components: when-authorized
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: db,diskSpace,ping
+        liveness:
+          include: ping
+    prometheus:
+      enabled: true
+    metrics:
+      enabled: true
+    # Désactiver les endpoints sensibles
+    env:
+      enabled: false
+    beans:
+      enabled: false
+    configprops:
+      enabled: false
+    loggers:
+      enabled: false
+
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 30s  # ⚠️ Intervalle plus long en prod
+        descriptions: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+      sla:
+        http.server.requests: 100ms, 500ms, 1s, 2s
+    enable:
+      jvm: true
+      system: true
+      logback: true
+      processor: true
+      tomcat: true
+      http: true
+      # Désactiver les métriques non essentielles
+      hikaricp: false
+      jdbc: false
+
+  info:
+    env:
+      enabled: true
+    build:
+      enabled: true
+    git:
+      mode: simple
+
+# SECURITE APPLICATIVE
+security:
+  basic:
+    enabled: false
+  # Configuration pour Actuator
+  user:
+    name: ${ACTUATOR_USER:admin}
+    password: ${ACTUATOR_PASSWORD:ChangeMe123!}
+    roles: ACTUATOR
+
+# LOGGING PRODUCTION
+logging:
+  level:
+    # Application - niveau INFO/WARN
+    com.example.monitor: INFO
+    com.example.monitor.service: INFO
+    com.example.monitor.controller: INFO
+
+    # Spring Framework - réduire le bruit
+    org.springframework: WARN
+    org.springframework.security: WARN
+    org.springframework.transaction: WARN
+    org.springframework.web: WARN
+
+    # Hibernate - désactiver les logs SQL
+    org.hibernate.SQL: WARN
+    org.hibernate.type: WARN
+
+    # Micrometer - niveau INFO
+    io.micrometer: INFO
+
+    # Chrome DevTools - niveau INFO
+    com.example.monitor.controller.ChromeDevToolsController: INFO
+
+  pattern:
+    # Format structuré pour les logs prod
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+  file:
+    name: /var/log/machine-monitor/application.log  # ⚠️ Chemin absolu
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 3GB
+    clean-history-on-start: false
+
+  # Configuration logs externes
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      total-size-cap: 3GB
+
+# CONFIGURATION CACHE PRODUCTION
+caffeine:
+  cache:
+    tests:
+      expireAfterWrite: 15m
+      maximumSize: 2000
+    statistics:
+      expireAfterWrite: 10m
+      maximumSize: 500
+    rapports:
+      expireAfterWrite: 60m
+      maximumSize: 100
+
+# CONFIGURATION ENVIRONNEMENT CLOUD (optionnel)
+---
+spring:
+  config:
+    activate:
+      on-profile: "cloud"
+
+  cloud:
+    kubernetes:
+      config:
+        enabled: true
+      discovery:
+        enabled: true
+
+  datasource:
+    url: jdbc:mysql://${MYSQL_SERVICE_HOST:localhost}:${MYSQL_SERVICE_PORT:3306}/${DB_NAME:machine_monitor}?useUnicode=true&characterEncoding=UTF-8&useSSL=true&verifyServerCertificate=false&allowPublicKeyRetrieval=true&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&serverTimezone=Europe/Paris
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

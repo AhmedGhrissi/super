@@ -1,0 +1,11 @@
+# Mode développement (avec tes fichiers existants)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+
+# Mode production (avec Docker)
+chmod +x scripts/deploy-prod.sh
+./scripts/deploy-prod.sh
+
+# Accès
+# App: http://localhost:8080
+# Health: http://localhost:8080/monitoring/health
+# Métriques: http://localhost:8080/monitoring/prometheus

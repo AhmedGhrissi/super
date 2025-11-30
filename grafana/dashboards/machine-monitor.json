@@ -1,0 +1,63 @@
+{
+  "dashboard": {
+    "title": "Machine Monitor - Supervision",
+    "tags": ["monitoring", "tests", "performance"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "Taux de succès des tests",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "100 * (rate(machine_monitor_tests_successful_total[5m]) / rate(machine_monitor_tests_executions_total[5m]))",
+            "legendFormat": "Taux de succès"
+          }
+        ],
+        "format": "percent",
+        "thresholds": {
+          "steps": [
+            {"color": "red", "value": null},
+            {"color": "yellow", "value": 90},
+            {"color": "green", "value": 95}
+          ]
+        }
+      },
+      {
+        "title": "Temps de réponse des tests",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(machine_monitor_test_execution_time_seconds_bucket[5m]))",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(machine_monitor_test_execution_time_seconds_bucket[5m]))",
+            "legendFormat": "P50"
+          }
+        ]
+      },
+      {
+        "title": "Tests par minute",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(machine_monitor_tests_executions_total[1m]) * 60",
+            "legendFormat": "Exécutions/min"
+          }
+        ]
+      },
+      {
+        "title": "Statut des threads",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "executor_pool_size_threads{name=\"testExecutor\"}",
+            "legendFormat": "Threads actifs"
+          }
+        ],
+        "max": 100
+      }
+    ],
+    "refresh": "10s"
+  }
+}

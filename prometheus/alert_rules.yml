@@ -1,0 +1,59 @@
+groups:
+  - name: machine_monitor_alerts
+    rules:
+      # Alertes métier
+      - alert: HighTestFailureRate
+        expr: rate(machine_monitor_tests_failed_total[5m]) / rate(machine_monitor_tests_executions_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          service: machine-monitor
+        annotations:
+          summary: "Taux d'échec des tests élevé"
+          description: "Le taux d'échec des tests est de {{ $value | humanizePercentage }} sur les 5 dernières minutes"
+          
+      - alert: TestExecutionSlow
+        expr: histogram_quantile(0.95, rate(machine_monitor_test_execution_time_seconds_bucket[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Temps d'exécution des tests élevé"
+          description: "95% des tests mettent plus de {{ $value }} secondes à s'exécuter"
+          
+      - alert: ThreadPoolSaturation
+        expr: executor_queue_remaining_tasks{name="testExecutor"} < 100
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "File d'attente du pool de threads saturée"
+          description: "Il reste seulement {{ $value }} tâches dans la file d'attente"
+          
+      # Alertes infrastructure
+      - alert: ApplicationDown
+        expr: up{job="machine-monitor"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Application machine-monitor down"
+          description: "L'application ne répond pas depuis 1 minute"
+          
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes / 1024 / 1024 > 2048
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Utilisation mémoire élevée"
+          description: "L'application utilise {{ $value }} MB de mémoire"
+          
+      - alert: DatabaseConnectionHigh
+        expr: hikari_connections_active > 25
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Nombre élevé de connexions base de données"
+          description: "{{ $value }} connexions actives vers la base de données"
