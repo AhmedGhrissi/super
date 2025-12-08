@@ -9,6 +9,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
@@ -27,7 +29,7 @@ public class Serveur {
 	}
 
 	public enum StatutServeur {
-		ACTIF, MAINTENANCE, HORS_LIGNE, EN_PANNE, EN_TEST
+		ACTIF, MAINTENANCE, HORS_LIGNE, EN_PANNE, EN_TEST, ERREUR
 	}
 
 	// === CHAMPS ===
@@ -219,5 +221,29 @@ public class Serveur {
 		return "Serveur{" + "id=" + id + ", nom='" + nom + '\'' + ", typeServeur=" + typeServeur + ", environnement="
 				+ environnement + ", statut=" + statut + ", caisseCode='" + caisseCode + '\'' + ", adresseIP='"
 				+ adresseIP + '\'' + '}';
+	}
+
+	@ManyToOne
+	@JoinColumn(name = "caisse_code", referencedColumnName = "code", insertable = false, updatable = false)
+	private Caisse caisse;
+
+	public Caisse getCaisse() {
+		return caisse;
+	}
+
+	public void setCaisse(Caisse caisse) {
+		this.caisse = caisse;
+	}
+
+	@Column(name = "temps_reponse")
+	private Integer tempsReponse;
+
+	// Ajoutez le getter et setter
+	public Integer getTempsReponse() {
+		return tempsReponse;
+	}
+
+	public void setTempsReponse(Integer tempsReponse) {
+		this.tempsReponse = tempsReponse;
 	}
 }

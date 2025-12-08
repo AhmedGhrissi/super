@@ -1,81 +1,126 @@
 package com.example.monitor.controller;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.example.monitor.model.Alert;
+import com.example.monitor.model.enums.CriticiteAlerte;
 import com.example.monitor.service.AlertService;
-import com.example.monitor.service.EmailService;
-import com.example.monitor.service.ServeurStatsService;
 
-@RestController
-@RequestMapping("/api/alertes")
+@Controller
+@RequestMapping("/alertes")
 public class AlertController {
 
 	@Autowired
 	private AlertService alertService;
 
-	@Autowired
-	private ServeurStatsService serveurStatsService;
+	// ========== PAGES HTML ==========
 
-	@Autowired
-	private EmailService emailService;
-
-	@PostMapping("/verifier")
-	public String declencherVerification() {
+	@GetMapping
+	public String listAlertes(Model model, @RequestParam(required = false) String criticite) {
 		try {
-			alertService.declencherVerificationManuelle();
-			return "🔍 Vérification des serveurs critiques déclenchée!";
-		} catch (Exception e) {
-			return "❌ Erreur: " + e.getMessage();
-		}
-	}
+			List<Alert> alertes;
 
-	@GetMapping("/statut")
-	public String getStatutAlertes() {
-		try {
-			int serveursCritiques = serveurStatsService.getServeursAvecProblemes().size();
-			return "🚨 Serveurs critiques: " + serveursCritiques;
-		} catch (Exception e) {
-			return "❌ Erreur: " + e.getMessage();
-		}
-	}
-
-	@PostMapping("/test-email")
-	public String testEmail() {
-		try {
-			// Simuler un serveur critique pour tester
-			alertService.declencherVerificationManuelle();
-			return "📧 Test d'alerte email déclenché! Vérifie tes emails.";
-		} catch (Exception e) {
-			return "❌ Erreur test email: " + e.getMessage();
-		}
-	}
-
-	@PostMapping("/notifier-test-manuel")
-	public String notifierTestManuel(@RequestParam String serveurNom, @RequestParam boolean succes) {
-		try {
-			System.out.println("🎯 === NOTIFIER TEST MANUEL ===");
-			System.out.println("📝 Serveur: " + serveurNom);
-			System.out.println("📝 Succès: " + succes);
-
-			if (!succes) {
-				System.out.println("🚨 ENVOI ALERTE CRITIQUE POUR: " + serveurNom);
-				emailService.envoyerAlerteCritique(serveurNom, 50.0);
-				System.out.println("✅ Alerte envoyée");
-				return "🚨 Alerte envoyée pour " + serveurNom;
+			if (criticite != null && !criticite.isEmpty()) {
+				CriticiteAlerte criticiteEnum = CriticiteAlerte.valueOf(criticite.toUpperCase());
+				alertes = alertService.getAlertesByCriticite(criticiteEnum);
+			} else {
+				alertes = alertService.getAllAlertes();
 			}
 
-			System.out.println("✅ Test réussi - Pas d'alerte");
-			return "✅ Test réussi - Pas d'alerte nécessaire";
+			model.addAttribute("alertes", alertes);
+			model.addAttribute("criticite", criticite);
 
+			return "alertes/list";
 		} catch (Exception e) {
-			System.err.println("❌ ERREUR: " + e.getMessage());
-			e.printStackTrace();
-			return "❌ Erreur: " + e.getMessage();
+			model.addAttribute("error", "Erreur: " + e.getMessage());
+			return "alertes/list";
+		}
+	}
+
+	@GetMapping("/view/{id}")
+	public String viewAlerte(@PathVariable Long id, Model model) {
+		try {
+			Alert alerte = alertService.findById(id);
+			if (alerte == null) {
+				return "redirect:/alertes?error=not_found";
+			}
+			model.addAttribute("alerte", alerte);
+			return "alertes/view";
+		} catch (Exception e) {
+			return "redirect:/alertes?error=" + e.getMessage();
+		}
+	}
+
+	// ========== API POUR DASHBOARD ==========
+
+	@GetMapping("/api/actives")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> getAlertesActivesApi() {
+		try {
+			List<Map<String, Object>> alertes = alertService.getAlertesPourAPI();
+			return ResponseEntity.ok(alertes);
+		} catch (Exception e) {
+			return ResponseEntity.ok(List.of());
+		}
+	}
+
+	@GetMapping("/api/stats")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> getAlertesStatsApi() {
+		try {
+			// Récupérer les stats en Integer
+			Map<String, Integer> statsInteger = alertService.getStatsAlertes();
+
+			// Convertir en Map<String, Object> pour l'API
+			Map<String, Object> statsObject = new HashMap<>();
+			statsObject.put("critical", statsInteger.getOrDefault("critical", 0));
+			statsObject.put("warning", statsInteger.getOrDefault("warning", 0));
+			statsObject.put("info", statsInteger.getOrDefault("info", 0));
+			statsObject.put("total", statsInteger.getOrDefault("total", 0));
+
+			return ResponseEntity.ok(statsObject);
+		} catch (Exception e) {
+			Map<String, Object> defaultStats = new HashMap<>();
+			defaultStats.put("critical", 0);
+			defaultStats.put("warning", 0);
+			defaultStats.put("info", 0);
+			defaultStats.put("total", 0);
+			return ResponseEntity.ok(defaultStats);
+		}
+	}
+
+	@PostMapping("/resoudre/{id}")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> resoudreAlerte(@PathVariable Long id) {
+		try {
+			alertService.resolveAlert(id);
+			return ResponseEntity.ok(Map.of("success", true, "message", "Alerte résolue"));
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Erreur: " + e.getMessage()));
+		}
+	}
+
+	@PostMapping("/supprimer/{id}")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> supprimerAlerte(@PathVariable Long id) {
+		try {
+			alertService.deleteById(id);
+			return ResponseEntity.ok(Map.of("success", true, "message", "Alerte supprimée"));
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Erreur: " + e.getMessage()));
 		}
 	}
 }

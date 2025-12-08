@@ -126,4 +126,5 @@ public class ResultatsTests {
 	public void setDateExecution(LocalDateTime dateExecution) {
 		this.dateExecution = dateExecution;
 	}
+
 }

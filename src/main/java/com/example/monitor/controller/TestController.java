@@ -1,5 +1,6 @@
 package com.example.monitor.controller;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,17 +29,6 @@ public class TestController {
 		model.addAttribute("tests", tests);
 		return "tests/list";
 	}
-
-//	@GetMapping("/details/{id}")
-//	public String viewTest(@PathVariable Long id, Model model) {
-//		try {
-//			TestStandard test = testService.findById(id);
-//			model.addAttribute("test", test);
-//			return "tests/view"; // ✅ Va vers la page de détail
-//		} catch (Exception e) {
-//			return "redirect:/tests?error=not_found";
-//		}
-//	}
 
 	@GetMapping("/details/{id}")
 	public String viewTest(@PathVariable Long id, Model model) {
@@ -111,4 +101,76 @@ public class TestController {
 			return "redirect:/tests?error=update_failed";
 		}
 	}
+
+	// ========== NOUVEAUX ENDPOINTS POUR EXÉCUTION ==========
+
+	// ✅ Page pour exécuter les tests
+	@GetMapping("/execute")
+	public String executeTestsPage(Model model) {
+		List<String> categories = Arrays.asList("conformite", "processus_metier", "surveillance", "ged", "integration",
+				"web");
+		model.addAttribute("categories", categories);
+		return "tests/execute";
+	}
+
+//	// ✅ Lancer tous les tests
+//	@PostMapping("/execute/all")
+//	@ResponseBody
+//	public ResponseEntity<?> executeAllTests() {
+//		try {
+//			System.out.println("🚀 POST /tests/execute/all appelé - Lancement de tous les tests");
+//
+//			// Simuler l'exécution pour la démo
+//			Thread.sleep(1000); // Attente de 1 sec pour simuler
+//
+//			// Logique réelle à implémenter :
+//			// testService.executeAllActiveTests();
+//
+//			System.out.println("✅ Tous les tests lancés avec succès");
+//
+//			return ResponseEntity.ok()
+//					.body(Map.of("success", true, "message", "Tous les tests ont été lancés avec succès !", "timestamp",
+//							System.currentTimeMillis(), "code", "EXECUTION_STARTED"));
+//
+//		} catch (Exception e) {
+//			System.err.println("❌ Erreur lors du lancement des tests: " + e.getMessage());
+//			e.printStackTrace();
+//
+//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//					.body(Map.of("error", "Erreur lors du lancement des tests", "details", e.getMessage(), "timestamp",
+//							System.currentTimeMillis()));
+//		}
+//	}
+//
+//	// ✅ Lancer tests par catégorie
+//	@PostMapping("/execute/category")
+//	@ResponseBody
+//	public ResponseEntity<?> executeTestsByCategory(@RequestParam String categorie) {
+//		try {
+//			if (categorie == null || categorie.isEmpty()) {
+//				return ResponseEntity.badRequest().body(Map.of("error", "Catégorie non spécifiée"));
+//			}
+//
+//			System.out.println("🚀 POST /tests/execute/category appelé - Catégorie: " + categorie);
+//
+//			// Simuler l'exécution
+//			Thread.sleep(1500);
+//
+//			// Logique réelle à implémenter :
+//			// testService.executeTestsByCategory(categorie);
+//
+//			System.out.println("✅ Tests lancés pour catégorie: " + categorie);
+//
+//			return ResponseEntity.ok()
+//					.body(Map.of("success", true, "message",
+//							"Tests de la catégorie '" + categorie + "' lancés avec succès !", "categorie", categorie,
+//							"timestamp", System.currentTimeMillis(), "code", "CATEGORY_EXECUTION_STARTED"));
+//
+//		} catch (Exception e) {
+//			System.err.println("❌ Erreur pour catégorie " + categorie + ": " + e.getMessage());
+//
+//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error",
+//					"Erreur lors du lancement des tests", "details", e.getMessage(), "categorie", categorie));
+//		}
+//	}
 }

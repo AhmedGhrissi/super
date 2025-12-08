@@ -1,9 +1,12 @@
 package com.example.monitor.controller;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.monitor.generator.ServeurDataGenerator;
+import com.example.monitor.model.Caisse;
 import com.example.monitor.model.Serveur;
+import com.example.monitor.service.CaisseService;
 import com.example.monitor.service.MiseAJourService;
 import com.example.monitor.service.ServeurService;
 
@@ -25,6 +30,9 @@ public class ServeurController {
 
 	private final ServeurService serveurService;
 	private final MiseAJourService miseAJourService;
+
+	@Autowired
+	private CaisseService caisseService;
 
 	public ServeurController(ServeurService serveurService, MiseAJourService miseAJourService) {
 		this.serveurService = serveurService;
@@ -119,9 +127,15 @@ public class ServeurController {
 
 	@GetMapping
 	public String listServeurs(@RequestParam(required = false) String codeCaisse,
-			@RequestParam(required = false) String typePatron, Model model) {
+			@RequestParam(required = false) String typePatron, @RequestParam(required = false) String environnement,
+			@RequestParam(required = false) String statut, Model model) {
 
 		System.out.println("=== DEBUG CONTRÔLEUR ===");
+		System.out.println("Filtres reçus:");
+		System.out.println("- codeCaisse: " + codeCaisse);
+		System.out.println("- typePatron: " + typePatron);
+		System.out.println("- environnement: " + environnement);
+		System.out.println("- statut: " + statut);
 
 		try {
 			List<Serveur> serveurs = serveurService.findAll();
@@ -138,16 +152,41 @@ public class ServeurController {
 				System.out.println("3. Après filtre type: " + serveurs.size());
 			}
 
+			// NOUVEAUX FILTRES
+			if (environnement != null && !environnement.isEmpty()) {
+				serveurs = serveurs.stream()
+						.filter(s -> s.getEnvironnement() != null && s.getEnvironnement().name().equals(environnement))
+						.collect(Collectors.toList());
+				System.out.println("4. Après filtre environnement: " + serveurs.size());
+			}
+
+			if (statut != null && !statut.isEmpty()) {
+				serveurs = serveurs.stream().filter(s -> s.getStatut() != null && s.getStatut().name().equals(statut))
+						.collect(Collectors.toList());
+				System.out.println("5. Après filtre statut: " + serveurs.size());
+			}
+
 			// Données pour les filtres
 			List<String> codesCaisse = serveurService.getAllCodesCaisse();
 			Map<String, Long> statsParType = serveurService.getStatsParType();
 
-			System.out.println("4. Codes caisse: " + codesCaisse);
-			System.out.println("5. Stats type: " + statsParType);
+			// NOUVEAUX : Récupérer les listes d'environnements et statuts
+			List<String> environnements = Arrays.stream(Serveur.Environnement.values()).map(Enum::name)
+					.collect(Collectors.toList());
+
+			List<String> statuts = Arrays.stream(Serveur.StatutServeur.values()).map(Enum::name)
+					.collect(Collectors.toList());
+
+			System.out.println("6. Codes caisse: " + codesCaisse);
+			System.out.println("7. Stats type: " + statsParType);
+			System.out.println("8. Environnements: " + environnements);
+			System.out.println("9. Statuts: " + statuts);
 
 			model.addAttribute("serveurs", serveurs);
 			model.addAttribute("codesCaisse", codesCaisse);
 			model.addAttribute("statsParType", statsParType);
+			model.addAttribute("environnements", environnements);
+			model.addAttribute("statuts", statuts);
 			model.addAttribute("totalServeurs", serveurService.countTotal());
 			model.addAttribute("serveursActifs", serveurService.countActifs());
 			model.addAttribute("tauxDisponibilite", serveurService.calculerTauxDisponibilite());
@@ -160,6 +199,12 @@ public class ServeurController {
 		}
 
 		return "serveurs/list";
+	}
+
+	@ModelAttribute("allCaisses")
+
+	public List<Caisse> getAllCaisses() {
+		return caisseService.findAll();
 	}
 
 //	// === VERSION UNIQUE AVEC FILTRES OPTIONNELS ===

@@ -3,7 +3,7 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <jsp:include page="../includes/header.jsp" />
-
+<link rel="stylesheet" href="/css/global-styles.css">
 <div class="container">
     <!-- En-tête de page -->
     <div class="page-header">

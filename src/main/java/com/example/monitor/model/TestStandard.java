@@ -191,6 +191,14 @@ public class TestStandard {
 		this.createdAt = createdAt;
 	}
 
+	public String getNom() {
+		return this.nomTest; // ou return this.nom; selon votre attribut
+	}
+
+	public void setNom(String nom) {
+		this.nomTest = nom; // ou this.nom = nom;
+	}
+
 	@Override
 	public String toString() {
 		return "TestStandard{id=" + id + ", codeTest='" + codeTest + "', nomTest='" + nomTest + "'}";

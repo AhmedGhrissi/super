@@ -3,7 +3,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <jsp:include page="../includes/header.jsp" />
-
+<link rel="stylesheet" href="/css/global-styles.css">
 <div class="container">
     <div class="page-header">
         <h2>✏️ Modifier le Serveur</h2>

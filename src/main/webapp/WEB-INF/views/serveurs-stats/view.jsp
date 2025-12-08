@@ -3,7 +3,7 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <jsp:include page="../includes/header.jsp" />
-
+<link rel="stylesheet" href="/css/global-styles.css">
 <div class="container">
     <!-- En-tête -->
     <div class="page-header" style="margin-bottom: 2rem;">

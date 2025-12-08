@@ -21,4 +21,5 @@ public interface TestRepository extends JpaRepository<TestStandard, Long> {
 
 	// Optionnel : trouver par type
 	List<TestStandard> findByTypeTest(String typeTest);
+
 }

@@ -10,6 +10,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAsync
 public class MonitorApplication {
 	public static void main(String[] args) {
-		SpringApplication.run(MonitorApplication.class, args);
+		SpringApplication app = new SpringApplication(MonitorApplication.class);
+
+		app.setAllowCircularReferences(true);
+
+		app.run(args);
 	}
 }

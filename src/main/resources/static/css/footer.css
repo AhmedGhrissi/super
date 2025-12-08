@@ -1,0 +1,273 @@
+/* ===== FOOTER STYLES ===== */
+.main-footer {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    margin-top: auto;
+    border-top: 3px solid #2e7d32;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    width: 100%;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Ligne principale */
+.footer-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Section gauche */
+.footer-left {
+    text-align: left;
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer-left h3 {
+    color: #fff;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.footer-left p {
+    color: #bdc3c7;
+    margin: 0.3rem 0 0 0;
+    font-size: 0.85rem;
+}
+
+/* Section centrale */
+.footer-center {
+    text-align: center;
+    flex: 1;
+    min-width: 250px;
+}
+
+.footer-center p {
+    color: #ecf0f1;
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Section droite */
+.footer-right {
+    text-align: right;
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer-features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: flex-end;
+}
+
+.footer-features span {
+    color: #ecf0f1;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.4rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+/* Ligne secondaire */
+.footer-secondary-row {
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+}
+
+.footer-tags {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    color: #95a5a6;
+    font-size: 0.75rem;
+}
+
+.footer-tags span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* ===== MODAL STYLES (on les garde ici) ===== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    display: none;
+}
+
+.modal {
+    background: white;
+    border-radius: 10px;
+    padding: 0;
+    min-width: 400px;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+}
+
+.modal-close:hover {
+    color: #d32f2f;
+    background: #ffebee;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-body p {
+    margin: 0;
+    color: #424242;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    padding: 0.5rem 1.25rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    min-width: 80px;
+}
+
+.modal-btn-cancel {
+    background: #6c757d;
+    color: white;
+}
+
+.modal-btn-cancel:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+
+.modal-btn-confirm {
+    background: #2e7d32;
+    color: white;
+}
+
+.modal-btn-confirm:hover {
+    background: #1b5e20;
+    transform: translateY(-1px);
+}
+
+.modal-btn-danger {
+    background: #d32f2f;
+    color: white;
+}
+
+.modal-btn-danger:hover {
+    background: #c62828;
+    transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .footer-main-row {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.2rem;
+    }
+
+    .footer-left,
+    .footer-center,
+    .footer-right {
+        text-align: center;
+        width: 100%;
+    }
+
+    .footer-features {
+        align-items: center;
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .footer-tags {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.4rem;
+    }
+
+    .modal {
+        min-width: 300px;
+        max-width: 90%;
+        margin: 1rem;
+    }
+}

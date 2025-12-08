@@ -1,0 +1,67 @@
+2025-12-01 21:11:23 [main] INFO  c.example.monitor.MonitorApplication - Starting MonitorApplication using Java 17.0.12 with PID 7700 (C:\Mes Devs\MACHINE-MONITOR\target\classes started by el_ch in C:\Mes Devs\MACHINE-MONITOR)
+2025-12-01 21:11:23 [main] DEBUG c.example.monitor.MonitorApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
+2025-12-01 21:11:23 [main] INFO  c.example.monitor.MonitorApplication - The following 3 profiles are active: "security", "monitoring", "dev"
+2025-12-01 21:11:24 [main] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.support.BeanDefinitionOverrideException: Invalid bean definition with name 'characterEncodingFilter' defined in class path resource [com/example/monitor/config/WebConfig.class]: Cannot register bean definition [Root bean: class [null]; scope=; abstract=false; lazyInit=null; autowireMode=3; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=webConfig; factoryMethodName=characterEncodingFilter; initMethodNames=null; destroyMethodNames=[(inferred)]; defined in class path resource [com/example/monitor/config/WebConfig.class]] for bean 'characterEncodingFilter' since there is already [Root bean: class [null]; scope=; abstract=false; lazyInit=null; autowireMode=3; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=encodingConfig; factoryMethodName=characterEncodingFilter; initMethodNames=null; destroyMethodNames=[(inferred)]; defined in class path resource [com/example/monitor/config/EncodingConfig.class]] bound.
+2025-12-01 21:11:24 [main] INFO  o.s.b.a.l.ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-12-01 21:11:24 [main] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+The bean 'characterEncodingFilter', defined in class path resource [com/example/monitor/config/WebConfig.class], could not be registered. A bean with that name has already been defined in class path resource [com/example/monitor/config/EncodingConfig.class] and overriding is disabled.
+
+Action:
+
+Consider renaming one of the beans or enabling overriding by setting spring.main.allow-bean-definition-overriding=true
+
+2025-12-01 21:14:12 [main] INFO  c.example.monitor.MonitorApplication - Starting MonitorApplication using Java 17.0.12 with PID 38924 (C:\Mes Devs\MACHINE-MONITOR\target\classes started by el_ch in C:\Mes Devs\MACHINE-MONITOR)
+2025-12-01 21:14:12 [main] DEBUG c.example.monitor.MonitorApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
+2025-12-01 21:14:12 [main] INFO  c.example.monitor.MonitorApplication - The following 3 profiles are active: "security", "monitoring", "dev"
+2025-12-01 21:14:14 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-01 21:14:14 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 208 ms. Found 14 JPA repository interfaces.
+2025-12-01 21:14:14 [main] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.support.BeanDefinitionOverrideException: Invalid bean definition with name 'characterEncodingFilter' defined in class path resource [org/springframework/boot/autoconfigure/web/servlet/HttpEncodingAutoConfiguration.class]: Cannot register bean definition [Root bean: class [null]; scope=; abstract=false; lazyInit=null; autowireMode=3; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=org.springframework.boot.autoconfigure.web.servlet.HttpEncodingAutoConfiguration; factoryMethodName=characterEncodingFilter; initMethodNames=null; destroyMethodNames=[(inferred)]; defined in class path resource [org/springframework/boot/autoconfigure/web/servlet/HttpEncodingAutoConfiguration.class]] for bean 'characterEncodingFilter' since there is already [Root bean: class [null]; scope=; abstract=false; lazyInit=null; autowireMode=3; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=webConfig; factoryMethodName=characterEncodingFilter; initMethodNames=null; destroyMethodNames=[(inferred)]; defined in class path resource [com/example/monitor/config/WebConfig.class]] bound.
+2025-12-01 21:14:14 [main] INFO  o.s.b.a.l.ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-12-01 21:14:14 [main] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+The bean 'characterEncodingFilter', defined in class path resource [org/springframework/boot/autoconfigure/web/servlet/HttpEncodingAutoConfiguration.class], could not be registered. A bean with that name has already been defined in class path resource [com/example/monitor/config/WebConfig.class] and overriding is disabled.
+
+Action:
+
+Consider renaming one of the beans or enabling overriding by setting spring.main.allow-bean-definition-overriding=true
+
+2025-12-01 21:17:23 [main] INFO  c.example.monitor.MonitorApplication - Starting MonitorApplication using Java 17.0.12 with PID 29632 (C:\Mes Devs\MACHINE-MONITOR\target\classes started by el_ch in C:\Mes Devs\MACHINE-MONITOR)
+2025-12-01 21:17:23 [main] DEBUG c.example.monitor.MonitorApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
+2025-12-01 21:17:23 [main] INFO  c.example.monitor.MonitorApplication - The following 3 profiles are active: "security", "monitoring", "dev"
+2025-12-01 21:17:25 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-01 21:17:25 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 170 ms. Found 14 JPA repository interfaces.
+2025-12-01 21:17:25 [main] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.support.BeanDefinitionOverrideException: Invalid bean definition with name 'characterEncodingFilter' defined in class path resource [org/springframework/boot/autoconfigure/web/servlet/HttpEncodingAutoConfiguration.class]: Cannot register bean definition [Root bean: class [null]; scope=; abstract=false; lazyInit=null; autowireMode=3; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=org.springframework.boot.autoconfigure.web.servlet.HttpEncodingAutoConfiguration; factoryMethodName=characterEncodingFilter; initMethodNames=null; destroyMethodNames=[(inferred)]; defined in class path resource [org/springframework/boot/autoconfigure/web/servlet/HttpEncodingAutoConfiguration.class]] for bean 'characterEncodingFilter' since there is already [Root bean: class [null]; scope=; abstract=false; lazyInit=null; autowireMode=3; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=webConfig; factoryMethodName=characterEncodingFilter; initMethodNames=null; destroyMethodNames=[(inferred)]; defined in class path resource [com/example/monitor/config/WebConfig.class]] bound.
+2025-12-01 21:17:25 [main] INFO  o.s.b.a.l.ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-12-01 21:17:25 [main] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+The bean 'characterEncodingFilter', defined in class path resource [org/springframework/boot/autoconfigure/web/servlet/HttpEncodingAutoConfiguration.class], could not be registered. A bean with that name has already been defined in class path resource [com/example/monitor/config/WebConfig.class] and overriding is disabled.
+
+Action:
+
+Consider renaming one of the beans or enabling overriding by setting spring.main.allow-bean-definition-overriding=true
+

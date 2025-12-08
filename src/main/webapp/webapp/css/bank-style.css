@@ -1,0 +1,265 @@
+/* webapp/css/bank-style.css - STYLE CRÉDIT AGRICOLE MODERNE */
+
+:root {
+    /* Palette Crédit Agricole officielle */
+    --ca-green: #006747;       /* Vert foncé CA */
+    --ca-light-green: #8DC63F; /* Vert clair CA */
+    --ca-white: #FFFFFF;
+    --ca-red: #D50032;         /* Rouge CA */
+    --ca-orange: #F57C00;      /* Orange pour alertes */
+    --ca-blue: #005BAC;        /* Bleu CA */
+    --ca-gray-light: #F5F7FA;
+    --ca-gray: #6C757D;
+    --ca-gray-dark: #343A40;
+
+    /* Gradients modernes */
+    --gradient-primary: linear-gradient(135deg, var(--ca-green), var(--ca-light-green));
+    --gradient-danger: linear-gradient(135deg, var(--ca-red), #FF5252);
+    --gradient-warning: linear-gradient(135deg, var(--ca-orange), #FF9800);
+    --gradient-success: linear-gradient(135deg, #2E7D32, #4CAF50);
+    --gradient-info: linear-gradient(135deg, var(--ca-blue), #2196F3);
+
+    /* Effets */
+    --shadow-sm: 0 2px 8px rgba(0, 103, 71, 0.1);
+    --shadow-md: 0 4px 16px rgba(0, 103, 71, 0.15);
+    --shadow-lg: 0 8px 32px rgba(0, 103, 71, 0.2);
+    --radius: 12px;
+    --radius-sm: 6px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === OVERRIDES POUR GARDER LA STRUCTURE EXISTANTE === */
+
+body {
+    background: linear-gradient(135deg, #F5F7FA 0%, #E8F5E9 100%) !important;
+    font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif !important;
+}
+
+/* ========== HEADER & NAVIGATION ========== */
+.navbar {
+    background: var(--ca-white) !important;
+    border-bottom: 4px solid var(--ca-green) !important;
+    box-shadow: var(--shadow-md) !important;
+    padding: 0.75rem 2rem !important;
+}
+
+.nav-brand h1 {
+    background: var(--gradient-primary) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    font-weight: 700 !important;
+    font-size: 1.8rem !important;
+}
+
+.nav-link {
+    border-radius: 25px !important;
+    padding: 0.75rem 1.25rem !important;
+    font-weight: 600 !important;
+    color: var(--ca-gray-dark) !important;
+    transition: var(--transition) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.nav-link::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: var(--gradient-primary) !important;
+    transition: left 0.3s ease !important;
+    z-index: -1 !important;
+}
+
+.nav-link:hover::before,
+.nav-link.active::before {
+    left: 0 !important;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: white !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 103, 71, 0.25) !important;
+}
+
+/* Bouton déconnexion rouge */
+.nav-link[style*="background: linear-gradient"] {
+    background: var(--gradient-danger) !important;
+}
+
+.nav-link[style*="background: linear-gradient"]:hover {
+    background: linear-gradient(135deg, #B71C1C, var(--ca-red)) !important;
+}
+
+/* Badge notification */
+.nav-badge {
+    background: var(--gradient-danger) !important;
+    animation: pulse 2s infinite !important;
+}
+
+/* ========== CARDS MODERNES ========== */
+.card, .stat-card {
+    background: var(--ca-white) !important;
+    border-radius: var(--radius) !important;
+    border: 1px solid rgba(0, 103, 71, 0.1) !important;
+    box-shadow: var(--shadow-sm) !important;
+    transition: var(--transition) !important;
+    backdrop-filter: none !important;
+}
+
+.card:hover, .stat-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: var(--shadow-lg) !important;
+    border-color: rgba(141, 198, 63, 0.3) !important;
+}
+
+/* ========== BOUTONS ========== */
+.btn-primary { background: var(--gradient-primary) !important; }
+.btn-secondary { background: linear-gradient(135deg, var(--ca-gray), #8E8E8E) !important; }
+.btn-success { background: var(--gradient-success) !important; }
+.btn-warning { background: var(--gradient-warning) !important; }
+.btn-danger { background: var(--gradient-danger) !important; }
+.btn-info { background: var(--gradient-info) !important; }
+
+.btn {
+    border-radius: 25px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    transition: var(--transition) !important;
+}
+
+.btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ========== TABLEAUX ========== */
+.data-table {
+    border-radius: var(--radius) !important;
+    overflow: hidden !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+.data-table th {
+    background: var(--gradient-primary) !important;
+    color: white !important;
+    padding: 1rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+.data-table tr:hover {
+    background: rgba(141, 198, 63, 0.05) !important;
+}
+
+/* ========== BADGES ========== */
+.badge-category-conformite { background: var(--gradient-danger) !important; }
+.badge-category-processus_metier { background: var(--gradient-success) !important; }
+.badge-category-surveillance { background: var(--gradient-warning) !important; }
+.badge-category-ged { background: var(--gradient-info) !important; }
+.badge-category-integration { background: linear-gradient(135deg, #7B1FA2, #9C27B0) !important; }
+.badge-category-web { background: linear-gradient(135deg, #D81B60, #E91E63) !important; }
+
+.status-badge.active {
+    background: #4CAF50 !important;
+    color: white !important;
+}
+
+.status-badge.inactive {
+    background: var(--ca-red) !important;
+    color: white !important;
+}
+
+/* ========== FOOTER ========== */
+footer[style] {
+    background: linear-gradient(135deg, var(--ca-green), var(--ca-light-green)) !important;
+    border-top: 4px solid var(--ca-red) !important;
+    padding: 1.5rem 2rem !important;
+    margin-top: 3rem !important;
+}
+
+/* Texte footer en blanc */
+footer[style] * {
+    color: white !important;
+}
+
+/* Icônes footer */
+footer[style] span[style*="color:"] {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* ========== DASHBOARD SPECIFIQUE ========== */
+/* Indicateur de statut */
+div[style*="background: linear-gradient(135deg"]:first-child {
+    background: var(--gradient-primary) !important;
+    border-radius: var(--radius) !important;
+}
+
+/* Cartes de stats */
+div[style*="background: white; padding: 2rem;"] {
+    border-top: 4px solid var(--ca-green) !important;
+}
+
+div[style*="background: linear-gradient(135deg, #2e7d32"] {
+    background: var(--gradient-success) !important;
+}
+
+/* Navigation rapide */
+a[style*="background: linear-gradient(135deg, #4361ee"] {
+    background: var(--gradient-primary) !important;
+}
+
+a[style*="background: linear-gradient(135deg, #7209b7"] {
+    background: linear-gradient(135deg, #7B1FA2, #9C27B0) !important;
+}
+
+a[style*="background: linear-gradient(135deg, #06d6a0"] {
+    background: var(--gradient-success) !important;
+}
+
+a[style*="background: linear-gradient(135deg, #ff9e00"] {
+    background: var(--gradient-warning) !important;
+}
+
+/* Serveurs actifs */
+div[style*="border-left: 4px solid #4361ee"] {
+    border-left-color: var(--ca-green) !important;
+}
+
+/* ========== MODALES ========== */
+.modal-overlay {
+    background: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(4px) !important;
+}
+
+.modal {
+    border-radius: var(--radius) !important;
+    box-shadow: var(--shadow-lg) !important;
+    border: 1px solid rgba(0, 103, 71, 0.1) !important;
+}
+
+.modal-btn-confirm {
+    background: var(--gradient-primary) !important;
+}
+
+.modal-btn-danger {
+    background: var(--gradient-danger) !important;
+}
+
+/* ========== NOTIFICATIONS ========== */
+.custom-notification {
+    border-radius: var(--radius) !important;
+    box-shadow: var(--shadow-lg) !important;
+    font-weight: 600 !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1

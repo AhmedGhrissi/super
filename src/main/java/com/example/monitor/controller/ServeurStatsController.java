@@ -66,9 +66,15 @@ public class ServeurStatsController {
 			// Statistiques globales
 			var statsGlobales = serveurStatsService.getStatistiquesGlobales();
 
+			// Serveurs critiques pour le dashboard
+			var serveursCritiques = serveurStatsService.getServeursCritiques();
+			int serveursCritiquesCount = serveursCritiques != null ? serveursCritiques.size() : 0;
+
 			model.addAttribute("serveursStats", serveursStats);
 			model.addAttribute("statsGlobales", statsGlobales);
-			model.addAttribute("codesCaisse", getCodesCaisse()); // Méthode simplifiée
+			model.addAttribute("serveursCritiques", serveursCritiques);
+			model.addAttribute("serveursCritiquesCount", serveursCritiquesCount);
+			model.addAttribute("codesCaisse", getCodesCaisse());
 
 			// Filtres actifs
 			if (codeCaisse != null) {
@@ -89,8 +95,9 @@ public class ServeurStatsController {
 	public String serveursAvecProblemes(Model model) {
 		try {
 			List<ServeurStatistiques> serveursProblemes = serveurStatsService.getServeursAvecProblemes();
+			int totalProblemes = serveursProblemes != null ? serveursProblemes.size() : 0;
 			model.addAttribute("serveursProblemes", serveursProblemes);
-			model.addAttribute("totalProblemes", serveursProblemes != null ? serveursProblemes.size() : 0);
+			model.addAttribute("totalProblemes", totalProblemes);
 		} catch (Exception e) {
 			model.addAttribute("error", "Erreur lors du chargement des serveurs avec problèmes: " + e.getMessage());
 		}
@@ -110,6 +117,18 @@ public class ServeurStatsController {
 		return "serveurs-stats/top";
 	}
 
+	@GetMapping("/critiques")
+	@ResponseBody
+	public List<ServeurStatistiques> getServeursCritiques() {
+		return serveurStatsService.getServeursAvecProblemes();
+	}
+
+	@GetMapping("/api/dashboard/critiques")
+	@ResponseBody
+	public List<ServeurStatistiques> getServeursCritiquesPourDashboard() {
+		return serveurStatsService.getServeursCritiques();
+	}
+
 	// Méthode utilitaire pour les codes de caisse
 	private List<String> getCodesCaisse() {
 		try {
@@ -120,19 +139,11 @@ public class ServeurStatsController {
 		}
 	}
 
-	private double calculerDisponibiliteMoyenne(List<ServeurStatistiques> stats) {
-		if (stats.isEmpty()) {
-			return 0.0;
-		}
-		return stats.stream().mapToDouble(s -> s.getDisponibilitePercent().doubleValue()).average().orElse(0.0);
-	}
-
 	@GetMapping("/export/{serveurNom}")
 	public void exportStats(@PathVariable String serveurNom, HttpServletResponse response) {
 		try {
 			exportService.exportStatsExcel(serveurNom, response);
 		} catch (IOException e) {
-			// Gestion d'erreur
 			try {
 				response.sendRedirect("/serveurs-stats/" + serveurNom + "?error=Export échoué");
 			} catch (IOException ex) {
@@ -164,6 +175,11 @@ public class ServeurStatsController {
 					System.out.println("Serveurs même caisse: " + serveursMemeCaisse.size());
 				}
 
+				// Serveurs critiques similaires
+				List<ServeurStatistiques> serveursCritiquesSimilaires = serveurStatsService
+						.getServeursCritiquesSimilaires(stats.getTypeServeur());
+				model.addAttribute("serveursCritiquesSimilaires", serveursCritiquesSimilaires);
+
 				return "serveurs-stats/view";
 			} else {
 				System.out.println("❌ Serveur non trouvé dans les statistiques");
@@ -175,10 +191,5 @@ public class ServeurStatsController {
 		}
 
 		return "redirect:/serveurs-stats";
-	}
-
-	@GetMapping("/critiques")
-	public List<ServeurStatistiques> getServeursCritiques() {
-		return serveurStatsService.getServeursAvecProblemes();
 	}
 }

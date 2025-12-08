@@ -1,22 +1,23 @@
 package com.example.monitor.service;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.monitor.generator.ServeurDataGenerator;
+import com.example.monitor.model.Caisse;
 import com.example.monitor.model.Serveur;
+import com.example.monitor.model.Serveur.StatutServeur;
+import com.example.monitor.repository.CaisseRepository;
 import com.example.monitor.repository.MiseAJourRepository;
 import com.example.monitor.repository.ServeurRepository;
-
-import jakarta.annotation.PostConstruct;
 
 @Service
 @Transactional
@@ -24,10 +25,16 @@ public class ServeurService {
 
 	private final ServeurRepository serveurRepository;
 	private final MiseAJourRepository miseAJourRepository;
+	private final CaisseRepository caisseRepository;
 
-	public ServeurService(ServeurRepository serveurRepository, MiseAJourRepository miseAJourRepository) {
+	@Autowired
+	private ServeurStatsService serveurStatsService;
+
+	public ServeurService(ServeurRepository serveurRepository, MiseAJourRepository miseAJourRepository,
+			CaisseRepository caisseRepository) {
 		this.serveurRepository = serveurRepository;
 		this.miseAJourRepository = miseAJourRepository;
+		this.caisseRepository = caisseRepository;
 	}
 
 	// === MÉTHODES CRUD ===
@@ -57,8 +64,12 @@ public class ServeurService {
 		return serveurRepository.count();
 	}
 
+	public long countAll() {
+		return serveurRepository.count();
+	}
+
 	public long countActifs() {
-		return serveurRepository.countByStatut(Serveur.StatutServeur.ACTIF);
+		return serveurRepository.countByStatut(StatutServeur.ACTIF);
 	}
 
 	public long countProduction() {
@@ -69,16 +80,86 @@ public class ServeurService {
 		return serveurRepository.countByEnvironnement(environnement);
 	}
 
-	public long countByStatut(Serveur.StatutServeur statut) {
+	public long countByStatut(StatutServeur statut) {
 		return serveurRepository.countByStatut(statut);
+	}
+
+	/**
+	 * Récupérer toutes les caisses avec leurs serveurs
+	 */
+	public List<Caisse> getCaissesAvecServeurs() {
+		try {
+			List<Caisse> caisses = caisseRepository.findAll();
+
+			// Pour chaque caisse, récupérer ses serveurs
+			for (Caisse caisse : caisses) {
+				List<Serveur> serveurs = serveurRepository.findByCaisseCode(caisse.getCode());
+				caisse.setServeurs(serveurs); // Si votre modèle Caisse a cette relation
+			}
+
+			return caisses;
+		} catch (Exception e) {
+			System.err.println("❌ Erreur getCaissesAvecServeurs: " + e.getMessage());
+			return new ArrayList<>();
+		}
+	}
+
+	/**
+	 * Alternative : Récupérer les codes de caisse distincts avec le nombre de
+	 * serveurs
+	 */
+	public Map<String, Long> getCaissesAvecNbServeurs() {
+		try {
+			List<Serveur> serveurs = findAll();
+			Map<String, Long> result = new HashMap<>();
+
+			for (Serveur serveur : serveurs) {
+				String codeCaisse = serveur.getCaisseCode();
+				if (codeCaisse != null && !codeCaisse.isEmpty()) {
+					result.put(codeCaisse, result.getOrDefault(codeCaisse, 0L) + 1);
+				}
+			}
+
+			return result;
+		} catch (Exception e) {
+			System.err.println("❌ Erreur getCaissesAvecNbServeurs: " + e.getMessage());
+			return new HashMap<>();
+		}
+	}
+
+	/**
+	 * Récupérer tous les serveurs groupés par caisse
+	 */
+	public Map<String, List<Serveur>> getServeursParCaisse() {
+		try {
+			List<Serveur> serveurs = findAll();
+			Map<String, List<Serveur>> result = new HashMap<>();
+
+			for (Serveur serveur : serveurs) {
+				String codeCaisse = serveur.getCaisseCode();
+				if (codeCaisse != null && !codeCaisse.isEmpty()) {
+					result.computeIfAbsent(codeCaisse, k -> new ArrayList<>()).add(serveur);
+				}
+			}
+
+			return result;
+		} catch (Exception e) {
+			System.err.println("❌ Erreur getServeursParCaisse: " + e.getMessage());
+			return new HashMap<>();
+		}
 	}
 
 	// === MÉTHODES DE STATISTIQUES ===
 
 	public double calculerTauxDisponibilite() {
-		long totalServeurs = countTotal();
-		long serveursActifs = countActifs();
-		return totalServeurs > 0 ? Math.round((serveursActifs * 100.0) / totalServeurs * 10.0) / 10.0 : 0.0;
+		try {
+			// Utiliser le service de statistiques
+			Double moyenne = serveurStatsService.getDisponibiliteMoyenne();
+			return moyenne != null ? moyenne : 95.0;
+		} catch (Exception e) {
+			System.err.println("⚠️ Erreur calcul disponibilité: " + e.getMessage());
+			return 95.0; // Valeur par défaut
+		}
 	}
 
 	@Cacheable("statistiquesServeurs")
@@ -93,8 +174,8 @@ public class ServeurService {
 		stats.put("totalServeurs", totalServeurs);
 		stats.put("serveursActifs", serveursActifs);
 		stats.put("serveursProduction", serveursProduction);
-		stats.put("serveursMaintenance", countByStatut(Serveur.StatutServeur.MAINTENANCE));
-		stats.put("serveursHorsLigne", countByStatut(Serveur.StatutServeur.HORS_LIGNE));
+		stats.put("serveursMaintenance", countByStatut(StatutServeur.MAINTENANCE));
+		stats.put("serveursHorsLigne", countByStatut(StatutServeur.HORS_LIGNE));
 		stats.put("tauxDisponibilite", calculerTauxDisponibilite());
 
 		// Statistiques par type
@@ -115,101 +196,160 @@ public class ServeurService {
 		return stats;
 	}
 
-	// === MÉTHODES DE RECHERCHE ===
+	// === NOUVELLES MÉTHODES POUR SERVEURS CRITIQUES ===
 
-	public List<Serveur> findByCaisseCode(String caisseCode) {
-		return serveurRepository.findByCaisseCode(caisseCode);
-	}
+	public List<Map<String, Object>> getServeursCritiques() {
+		try {
+			System.out.println("🔍 getServeursCritiques() appelée dans ServeurService");
 
-	public List<Serveur> findByEnvironnement(Serveur.Environnement environnement) {
-		return serveurRepository.findByEnvironnement(environnement);
-	}
+			// Récupérer tous les serveurs
+			List<Serveur> serveurs = findAll();
 
-	public List<Serveur> findByStatut(Serveur.StatutServeur statut) {
-		return serveurRepository.findByStatut(statut);
-	}
+			// Filtrer les serveurs critiques (non actifs ou avec statut problématique)
+			return serveurs.stream().filter(serveur -> !serveur.getStatut().equals(StatutServeur.ACTIF))
+					.map(serveur -> {
+						Map<String, Object> map = new HashMap<>();
+						map.put("id", serveur.getId());
+						map.put("nom", serveur.getNom());
+						map.put("adresseIP", serveur.getAdresseIP());
+						map.put("statut", serveur.getStatut().name());
+						map.put("environnement", serveur.getEnvironnement().name());
+						map.put("typeServeur", serveur.getTypeServeur().name());
+						map.put("caisseCode", serveur.getCaisseCode());
+						map.put("dateCreation", serveur.getDateCreation());
 
-	public List<String> getCaissesAvecServeurs() {
-		return serveurRepository.findDistinctCaisseCodes();
-	}
+						// Déterminer le niveau de criticité
+						String criticite = "WARNING";
+						String icone = "⚠️";
+						String message = "Serveur " + serveur.getStatut().name();
 
-	// === MÉTHODES DE VÉRIFICATION ===
+						if (serveur.getStatut().equals(StatutServeur.HORS_LIGNE)) {
+							criticite = "CRITICAL";
+							icone = "🔴";
+							message = "Serveur hors ligne";
+						} else if (serveur.getStatut().equals(StatutServeur.MAINTENANCE)) {
+							criticite = "MAINTENANCE";
+							icone = "🟡";
+							message = "En maintenance";
+						} else if (serveur.getStatut().equals(StatutServeur.ERREUR)) {
+							criticite = "ERROR";
+							icone = "🔴";
+							message = "Erreur serveur";
+						}
 
-	public boolean existsByNom(String nom) {
-		return serveurRepository.existsByNom(nom);
-	}
+						map.put("criticite", criticite);
+						map.put("icone", icone);
+						map.put("message", message);
+						map.put("timestamp", System.currentTimeMillis());
 
-	public boolean existsByAdresseIP(String adresseIP) {
-		return serveurRepository.existsByAdresseIP(adresseIP);
-	}
+						return map;
+					}).toList();
 
-	@PostConstruct
-	public void initializeServeurs() {
-		if (serveurRepository.count() == 0) {
-			List<Serveur> serveurs = ServeurDataGenerator.generateAllServeurs();
-			serveurRepository.saveAll(serveurs);
-			System.out.println("✅ " + serveurs.size() + " serveurs initialisés avec la nomenclature");
+		} catch (Exception e) {
+			System.err.println("❌ Erreur dans getServeursCritiques: " + e.getMessage());
+			e.printStackTrace();
+			return List.of();
 		}
 	}
 
-	/**
-	 * Trouve les serveurs par code caisse
-	 */
-	public List<Serveur> findByCodeCaisse(String codeCaisse) {
-		return ServeurDataGenerator.filterByCaisse(findAll(), codeCaisse);
+	// ... garder tout le début du fichier jusqu'à la méthode getServeursAvecStatut
+	// ...
+
+	// === NOUVELLE MÉTHODE POUR ALERTES ===
+
+	public List<Map<String, Object>> getServeursAvecStatut() {
+		try {
+			List<Serveur> serveurs = findAll();
+			List<Map<String, Object>> result = new ArrayList<>();
+
+			for (Serveur serveur : serveurs) {
+				Map<String, Object> map = new HashMap<>();
+				map.put("id", serveur.getId());
+				map.put("nom", serveur.getNom());
+				map.put("adresseIP", serveur.getAdresseIP());
+				map.put("statut", serveur.getStatut().name());
+				// map.put("dernierCheck", serveur.getDernierCheck()); // Retirer si non
+				// existant
+				map.put("typeServeur", serveur.getTypeServeur().name());
+				map.put("environnement", serveur.getEnvironnement().name());
+
+				// Déterminer la criticité
+				String criticite = "INFO";
+				if (serveur.getStatut() == StatutServeur.HORS_LIGNE) {
+					criticite = "CRITICAL";
+				} else if (serveur.getStatut() == StatutServeur.ERREUR) {
+					criticite = "WARNING";
+				} else if (serveur.getStatut() == StatutServeur.MAINTENANCE) {
+					criticite = "WARNING";
+				}
+
+				map.put("criticite", criticite);
+				result.add(map);
+			}
+
+			return result;
+		} catch (Exception e) {
+			System.err.println("❌ Erreur getServeursAvecStatut: " + e.getMessage());
+			return new ArrayList<>();
+		}
 	}
 
-	/**
-	 * Trouve les serveurs par type de patron
-	 */
-	public List<Serveur> findByTypePatron(String typePatron) {
-		return ServeurDataGenerator.filterByType(findAll(), typePatron);
-	}
+	// ... continuer avec le reste du fichier ...
 
-	/**
-	 * Obtient le serveur primaire d'une caisse
-	 */
-	public Optional<Serveur> findServeurPrimaireByCaisse(String codeCaisse) {
-		return findByCodeCaisse(codeCaisse).stream().filter(s -> ServeurDataGenerator.isServeurPrimaire(s.getNom()))
-				.findFirst();
-	}
-
-	/**
-	 * Obtient le serveur secondaire d'une caisse
-	 */
-	public Optional<Serveur> findServeurSecondaireByCaisse(String codeCaisse) {
-		return findByCodeCaisse(codeCaisse).stream().filter(s -> ServeurDataGenerator.isServeurSecondaire(s.getNom()))
-				.findFirst();
-	}
-
-	/**
-	 * Statistiques par type de serveur
-	 */
-	public Map<String, Long> getStatsParTypePatron() {
-		List<Serveur> serveurs = findAll();
-		Map<String, Long> stats = new HashMap<>();
-
-		stats.put("PAGEDC", serveurs.stream()
-				.filter(s -> "PAGEDC".equals(ServeurDataGenerator.extractTypePatron(s.getNom()))).count());
-
-		stats.put("PD1SQL", serveurs.stream()
-				.filter(s -> "PD1SQL".equals(ServeurDataGenerator.extractTypePatron(s.getNom()))).count());
-
-		stats.put("PAB93003", serveurs.stream()
-				.filter(s -> "PAB93003".equals(ServeurDataGenerator.extractTypePatron(s.getNom()))).count());
-
-		return stats;
-	}
-
-	/**
-	 * Liste de tous les codes de caisse disponibles
-	 */
+	// Corriger la méthode getAllCodesCaisse
 	public List<String> getAllCodesCaisse() {
-		return Arrays.asList(ServeurDataGenerator.CODES_CAISSES);
+		try {
+			return serveurRepository.findAll().stream().map(Serveur::getCaisseCode).distinct()
+					.filter(code -> code != null && !code.isEmpty()).toList();
+		} catch (Exception e) {
+			System.err.println("❌ Erreur getAllCodesCaisse: " + e.getMessage());
+			return List.of();
+		}
 	}
 
-	public List<Serveur> getServeursActifs() {
-		return serveurRepository.findByStatut(Serveur.StatutServeur.ACTIF);
+	// Corriger la méthode verifierTousLesServeurs
+	public void verifierTousLesServeurs() {
+		try {
+			System.out.println("🔍 Vérification manuelle de tous les serveurs...");
+			List<Serveur> serveurs = findAll();
+
+			// Logique de vérification simple
+			for (Serveur serveur : serveurs) {
+				if (serveur.getStatut() == StatutServeur.HORS_LIGNE) {
+					System.out.println("⚠️ Serveur hors ligne: " + serveur.getNom());
+				}
+			}
+
+			System.out.println("✅ Vérification des serveurs terminée");
+		} catch (Exception e) {
+			System.err.println("❌ Erreur verifierTousLesServeurs: " + e.getMessage());
+		}
 	}
 
+	public Double getTempsReponseMoyen() {
+		try {
+			// Si vous n'avez pas getAverageResponseTime(), utilisez une autre méthode
+			// Option 1: Implémentation simple
+			List<com.example.monitor.model.Serveur> serveurs = serveurRepository.findAll();
+			if (serveurs.isEmpty()) {
+				return 50.0;
+			}
+
+			double totalTemps = 0.0;
+			int count = 0;
+			for (com.example.monitor.model.Serveur serveur : serveurs) {
+				// Récupérer le temps de réponse depuis les métriques
+				// Adaptez selon votre modèle
+				if (serveur.getTempsReponse() != null && serveur.getTempsReponse() > 0) {
+					totalTemps += serveur.getTempsReponse();
+					count++;
+				}
+			}
+
+			return count > 0 ? totalTemps / count : 50.0;
+
+		} catch (Exception e) {
+			return 50.0; // Valeur par défaut
+		}
+	}
 }

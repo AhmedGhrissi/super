@@ -34,7 +34,7 @@ class RealTimeMonitor {
             if (this.autoRefresh) {
                 this.loadDashboardStats();
             }
-        }, 30000); // Toutes les 30 secondes
+        }, 300000); // Toutes les 5 minutes
     }
 
     bindEvents() {

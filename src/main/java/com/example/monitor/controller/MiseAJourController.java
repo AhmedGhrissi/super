@@ -1,5 +1,6 @@
 package com.example.monitor.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,27 +34,23 @@ public class MiseAJourController {
 	@GetMapping
 	public String listMisesAJour(Model model) {
 		try {
-			List<MiseAJour> misesAJour = miseAJourService.findAllWithServeur();
+			// ⭐⭐ CORRECTION : Utilisez getMisesAJourCetteSemaine() au lieu de
+			// getMAJCetteSemaine()
+			List<MiseAJour> misesAJour = miseAJourService.getMisesAJourCetteSemaine();
+			List<MiseAJour> toutesMisesAJour = miseAJourService.findAll();
+			List<MiseAJour> prochainesMAJ = miseAJourService.getProchainesMisesAJour();
+
 			model.addAttribute("misesAJour", misesAJour);
-			model.addAttribute("totalMAJ", miseAJourService.countTotal());
-			model.addAttribute("majPlanifiees", miseAJourService.countPlanifiees());
-			model.addAttribute("majTerminees", miseAJourService.countTerminees());
-			model.addAttribute("majCetteSemaine", miseAJourService.countCetteSemaine());
-			model.addAttribute("majCetteSemaineList", miseAJourService.getMAJCetteSemaine());
-			model.addAttribute("statsMAJ", miseAJourService.getStatsMAJ());
-			model.addAttribute("prochaineMAJ", miseAJourService.getProchaineMAJ());
-			model.addAttribute("statutsMAJ", MiseAJour.StatutMiseAJour.values());
+			model.addAttribute("toutesMisesAJour", toutesMisesAJour);
+			model.addAttribute("prochainesMAJ", prochainesMAJ);
+			model.addAttribute("aujourdhui", LocalDate.now());
+
+			return "mises-a-jour/list";
 
 		} catch (Exception e) {
-			model.addAttribute("error", "Erreur lors du chargement des mises à jour: " + e.getMessage());
-			// Valeurs par défaut
-			model.addAttribute("totalMAJ", 0);
-			model.addAttribute("majPlanifiees", 0);
-			model.addAttribute("majTerminees", 0);
-			model.addAttribute("majCetteSemaine", 0);
+			model.addAttribute("error", "Erreur lors du chargement: " + e.getMessage());
+			return "mises-a-jour/list";
 		}
-
-		return "mises-a-jour/list";
 	}
 
 	@GetMapping("/create")

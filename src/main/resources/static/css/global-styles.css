@@ -1,0 +1,187 @@
+/* global-styles.css - Styles communs pour toutes les pages */
+
+:root {
+    --ca-green: #006747;
+    --ca-light-green: #8DC63F;
+    --ca-red: #D50032;
+    --ca-blue: #005BAC;
+    --ca-white: #FFFFFF;
+    --ca-gray-light: #F5F7FA;
+    --ca-gray: #6C757D;
+    --ca-dark: #343A40;
+}
+
+/* Styles communs pour les pages de liste */
+.page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.page-header {
+    background: linear-gradient(135deg, var(--ca-green), var(--ca-light-green));
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.page-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    opacity: 0.9;
+}
+
+/* Table styles */
+.data-table {
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+}
+
+.data-table th {
+    background: var(--ca-gray-light);
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--ca-dark);
+    border-bottom: 2px solid var(--ca-green);
+}
+
+.data-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.data-table tr:hover {
+    background: var(--ca-gray-light);
+}
+
+/* Button styles communes */
+.ca-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+.ca-btn-primary {
+    background: linear-gradient(135deg, var(--ca-green), var(--ca-light-green));
+    color: white;
+}
+
+.ca-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 103, 71, 0.2);
+}
+
+.ca-btn-secondary {
+    background: white;
+    color: var(--ca-green);
+    border: 2px solid var(--ca-green);
+}
+
+.ca-btn-secondary:hover {
+    background: var(--ca-green);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.ca-btn-danger {
+    background: var(--ca-red);
+    color: white;
+}
+
+.ca-btn-danger:hover {
+    background: #b00028;
+    transform: translateY(-2px);
+}
+
+/* Card styles */
+.ca-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+    margin-bottom: 1.5rem;
+}
+
+/* Form styles */
+.ca-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.ca-form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--ca-green);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ca-form-input {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #E0E0E0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: var(--ca-white);
+}
+
+.ca-form-input:focus {
+    outline: none;
+    border-color: var(--ca-light-green);
+    box-shadow: 0 0 0 3px rgba(141, 198, 63, 0.1);
+}
+
+/* Badges */
+.ca-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-success {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.badge-warning {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.badge-danger {
+    background: rgba(213, 0, 50, 0.1);
+    color: var(--ca-red);
+    border: 1px solid rgba(213, 0, 50, 0.2);
+}
+
+.badge-info {
+    background: rgba(23, 162, 184, 0.1);
+    color: #17a2b8;
+    border: 1px solid rgba(23, 162, 184, 0.2);
+}

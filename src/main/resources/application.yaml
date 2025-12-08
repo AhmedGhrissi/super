@@ -31,19 +31,21 @@ spring:
         order_updates: true
         order_inserts: true
 
+  # === CONFIGURATION JSP ===
   mvc:
     view:
       prefix: /WEB-INF/views/
       suffix: .jsp
-    web:
-      resources:
-        static-locations: classpath:/static/
+  web:
+    resources:
+      static-locations: classpath:/static/
 
-  transaction:
-    default-timeout: 30
-    rollback-on-commit-failure: true
+  # Désactiver Thymeleaf pour éviter les conflits
+  thymeleaf:
+    enabled: false
+    cache: false
 
-  # === NOUVELLE CONFIGURATION EMAIL ===
+  # === CONFIGURATION EMAIL ===
   mail:
     host: smtp.ethereal.email
     port: 587
@@ -60,7 +62,16 @@ spring:
           writetimeout: 5000
         debug: false
 
-# === CONFIGURATION CHROME DEVTOOLS ===
+  transaction:
+    default-timeout: 30
+    rollback-on-commit-failure: true
+
+  # Configuration sécurité pour le développement
+  security:
+    filter:
+      dispatcher-types: async,error,request
+
+# Configuration de l'application
 app:
   chrome-devtools:
     enabled: true
@@ -74,9 +85,10 @@ app:
     rapport-heure: 8
 
   monitoring:
-    intervalle-verification: "0 */30 * * * *"
+    intervalle-verification: "0 */5 * * * *"
     timeout-test: 5000
 
+# Configuration serveur
 server:
   port: 8080
   servlet:
@@ -84,13 +96,38 @@ server:
       charset: UTF-8
       enabled: true
       force: true
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        secure: false
+        same-site: lax
 
+  # Compression pour les performances
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+
+  # Tomcat configuration
+  tomcat:
+    max-threads: 200
+    min-spare-threads: 10
+    connection-timeout: 5000
+    max-connections: 10000
+    accept-count: 100
+    max-http-form-post-size: 10MB
+
+# Configuration Spring Boot Actuator
 management:
   endpoints:
     web:
       exposure:
         include: health,metrics,info,prometheus
       base-path: /monitoring
+      cors:
+        allowed-origins: "http://localhost:8080"
+        allowed-methods: "GET,POST"
     enabled-by-default: true
   endpoint:
     health:
@@ -117,24 +154,68 @@ info:
   app:
     name: "${spring.application.name}"
     version: "${spring.application.version}"
-    description: "Système de monitoring des machines et caisses"
+    description: "Système de monitoring des machines et caisses - Crédit Agricole"
   environment: "${spring.profiles.active}"
   contact:
-    email: "support@company.com"
-    team: "DevOps"
+    email: "support@credit-agricole.com"
+    team: "GEID Supervision"
 
 logging:
   level:
+    # Spring Framework
     org.springframework: INFO
     org.springframework.security: DEBUG
-    org.springframework.transaction: TRACE
-    org.springframework.orm.jpa: DEBUG
+    org.springframework.web.servlet: DEBUG
+    org.springframework.web.servlet.view.JstlView: DEBUG
+    org.springframework.web.servlet.view.UrlBasedViewResolver: DEBUG
+
+    # Hibernate/JPA
+    org.hibernate: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+    # Application
     com.example.monitor: INFO
+    com.example.monitor.controller: DEBUG
+    com.example.monitor.controller.LoginController: DEBUG
+    com.example.monitor.service: INFO
     com.example.monitor.service.EmailService: DEBUG
-    # Logs Chrome DevTools
+    com.example.monitor.config: DEBUG
+
+    # Chrome DevTools
     com.esm.machineMonitor.controller.ChromeDevToolsController: DEBUG
 
+    # Apache Commons
+    org.apache.catalina.core.ContainerBase: ERROR
+
+  # Configuration des fichiers de log
+  file:
+    name: logs/machine-monitor.log
+    max-size: 10MB
+    max-history: 30
+    total-size-cap: 100MB
+
+  # Configuration console
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %highlight(%-5level) - %cyan(%logger{36}) - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Configuration CORS globale
+cors:
+  allowed-origins: "http://localhost:8080"
+  allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+  allowed-headers: "*"
+  allow-credentials: true
+
+# Configuration JSP
+jsp:
+  servlet:
+    init-parameters:
+      development: true
+      checkInterval: 0
+
 ---
+# Profil dev
 spring:
   config:
     activate:
@@ -145,27 +226,53 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        use_sql_comments: true
 
   datasource:
     hikari:
       maximum-pool-size: 5
+      minimum-idle: 2
+      idle-timeout: 300000
+      max-lifetime: 1800000
 
   cache:
-    type: none
+    type: simple
+    cache-names: users,config,cache
 
+  # Configuration serveur pour dev
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# Configuration dev management
 management:
   endpoints:
     web:
       exposure:
         include: "*"
+      cors:
+        allowed-origins: "*"
+  endpoint:
+    health:
+      show-details: always
+    shutdown:
+      enabled: true
 
+# Logging dev
 logging:
   level:
     com.example.monitor: DEBUG
+    org.springframework.security: TRACE
+    org.springframework.web: DEBUG
+    org.springframework.transaction: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.stat: DEBUG
+    org.hibernate.cache: DEBUG
 
 ---
+# Profil prod
 spring:
   config:
     activate:
@@ -176,16 +283,84 @@ spring:
     properties:
       hibernate:
         format_sql: false
+        use_sql_comments: false
 
   datasource:
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
+      idle-timeout: 600000
+      max-lifetime: 3600000
 
   cache:
     type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=600s
+    cache-names: users,config,cache,sessions
 
+  # Configuration serveur pour prod
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  # Désactiver JSP cache en prod
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+  web:
+    resources:
+      static-locations: classpath:/static/,classpath:/public/,classpath:/resources/,classpath:/META-INF/resources/
+      cache:
+        period: 31536000 # 1 an en secondes
+      chain:
+        cache: true
+        compressed: true
+        strategy:
+          content:
+            enabled: true
+            paths: /**
+
+# Configuration prod management
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      cors:
+        allowed-origins: "https://prod-domain.com"
+    enabled-by-default: false
+  endpoint:
+    health:
+      show-details: when-authorized
+      roles: "ADMIN,SUPERVISEUR"
+    shutdown:
+      enabled: false
+
+# Logging prod
 logging:
   level:
     com.example.monitor: INFO
+    org.springframework.security: WARN
+    org.springframework.web: INFO
     org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
+  file:
+    name: /var/log/machine-monitor/app.log
+    max-size: 50MB
+    max-history: 60
+    total-size-cap: 1GB
+  logback:
+    rollingpolicy:
+      clean-history-on-start: true
+
+# Configuration SSL pour prod (optionnel)
+server:
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: changeit
+    key-store-type: PKCS12
+    key-alias: tomcat
+  forward-headers-strategy: framework

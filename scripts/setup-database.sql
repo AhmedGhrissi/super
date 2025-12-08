@@ -176,11 +176,13 @@ CREATE TABLE serveurs (
     notes TEXT,
     date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    temps_reponse INT DEFAULT 50,
     INDEX idx_nom (nom),
     INDEX idx_caisse_code (caisse_code),
     INDEX idx_statut (statut),
-    INDEX idx_environnement (environnement)
-);
+    INDEX idx_environnement (environnement),
+    CREATE INDEX  idx_temps_reponse ON serveurs(temps_reponse)
+);-- Ajouter la colonne temps_reponse si elle n'existe pas
 
 -- ========================
 -- ========================
@@ -277,6 +279,25 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     INDEX idx_user_role (user_role),
     INDEX idx_timestamp_username (timestamp, username)
 );
+
+-- ========================
+-- Ajouter la table alertes
+-- ========================
+
+CREATE TABLE IF NOT EXISTS alertes (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    titre VARCHAR(255) NOT NULL,
+    description TEXT,
+    criticite ENUM('INFO', 'WARNING', 'CRITICAL') NOT NULL,
+    type_alerte VARCHAR(50),
+    serveur_cible VARCHAR(100),
+    date_creation DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    date_resolution DATETIME,
+    resolue BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+CREATE INDEX idx_alertes_date_creation ON alertes(date_creation);
+CREATE INDEX idx_alertes_serveur_cible ON alertes(serveur_cible);
 
 -- ========================
 -- VUE POUR LES STATISTIQUES D'AUDIT

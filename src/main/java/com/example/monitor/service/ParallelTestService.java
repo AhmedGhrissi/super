@@ -2,6 +2,7 @@ package com.example.monitor.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -47,8 +48,9 @@ public class ParallelTestService {
 		long startTime = System.currentTimeMillis();
 
 		try {
-			// CORRECTION : Utilisation correcte du Timer avec Callable
-			TestResultService result = testTimer.recordCallable(() -> testService.executeSingleTest(config));
+			// CORRECTION : Utiliser un Callable pour le Timer
+			Callable<TestResultService> testTask = () -> testService.executeSingleTest(config);
+			TestResultService result = testTimer.recordCallable(testTask);
 
 			// Sauvegarde du résultat
 			ResultatsTests resultat = new ResultatsTests();
@@ -81,6 +83,7 @@ public class ParallelTestService {
 			return CompletableFuture.completedFuture(TestResultService.failure(config, e.getMessage()));
 		} finally {
 			metrics.decrementActiveThreads();
+			metrics.decrementPendingTests();
 		}
 	}
 

@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -18,10 +17,14 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.authorizeHttpRequests(authz -> authz
-				// Pages publiques
-				.requestMatchers("/", "/login", "/static/**", "/webjars/**", "/error", "/api/test/**",
-						"/api/urgence/**", "/api/debug/**")
+				// === PAGES PUBLIQUES ===
+				.requestMatchers("/", "/login", "/static/**", "/css/**", "/js/**", "/images/**", "/webjars/**",
+						"/error", "/favicon.ico", "/manifest.json", "/api/test/**", "/api/urgence/**", "/api/debug/**")
 				.permitAll()
+
+				// === DASHBOARD ===
+				.requestMatchers("/dashboard").authenticated()
+
 				// Monitoring public
 				.requestMatchers("/monitoring/health", "/monitoring/prometheus", "/monitoring/info").permitAll()
 
@@ -29,20 +32,38 @@ public class SecurityConfig {
 				.requestMatchers("/admin/users/**").hasAnyRole("SUPER_ADMIN", "SUPERVISEUR")
 
 				// Règles spécifiques
-				.requestMatchers("/tests/lancer-categorie/**").hasAnyRole("SUPERVISEUR", "TECHNICIEN", "OPERATEUR")
-				.requestMatchers("/api/audit/page").hasAnyRole("ADMIN", "SUPERVISEUR")
+				.requestMatchers("/tests/lancer-categorie/**", "/tests/lancer-tous")
+				.hasAnyRole("SUPERVISEUR", "TECHNICIEN", "OPERATEUR").requestMatchers("/api/audit/page")
+				.hasAnyRole("ADMIN", "SUPERVISEUR")
 
 				// Accès par rôle
 				.requestMatchers("/monitoring/**").hasAnyRole("SUPERVISEUR", "TECHNICIEN")
 				.requestMatchers("/api/tests/execute/**").hasAnyRole("SUPERVISEUR", "OPERATEUR", "TECHNICIEN")
 				.requestMatchers("/api/config/**", "/tests/**").hasAnyRole("SUPERVISEUR", "TECHNICIEN", "OPERATEUR")
 				.requestMatchers("/admin/**", "/users/**").hasRole("SUPERVISEUR")
-				.requestMatchers("/caisses/**", "/rapports/**", "/dashboard").authenticated().anyRequest()
-				.authenticated() // ⚠️ CETTE LIGNE DOIT ÊTRE COMME ÇA
+				.requestMatchers("/caisses/**", "/rapports/**").authenticated()
 
-		).formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login")
-				.successHandler(authenticationSuccessHandler()).failureUrl("/login?error=true").permitAll())
-				.httpBasic(Customizer.withDefaults()).csrf(AbstractHttpConfigurer::disable);
+				// Tout le reste nécessite une authentification
+				.anyRequest().authenticated())
+
+				.formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login")
+						.defaultSuccessUrl("/dashboard", true).failureUrl("/login?error=true")
+						.usernameParameter("username").passwordParameter("password").permitAll())
+
+				.logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login?logout=true")
+						.invalidateHttpSession(true).clearAuthentication(true).deleteCookies("JSESSIONID").permitAll())
+
+				.exceptionHandling(exception -> exception.accessDeniedPage("/access-denied"))
+
+				.httpBasic(Customizer.withDefaults())
+
+				// === CORRECTION IMPORTANTE : Ajouter /tests/** à la liste CSRF ===
+				.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/monitoring/**", "/h2-console/**",
+						"/tests/lancer-tous", // Ajouté
+						"/tests/lancer-categorie/**" // Ajouté
+				))
+
+				.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
 
 		return http.build();
 	}

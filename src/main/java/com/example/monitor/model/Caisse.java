@@ -135,4 +135,17 @@ public class Caisse {
 	public void setConfigurationServeurs(List<ConfigurationServeurs> configurationServeurs) {
 		this.configurationServeurs = configurationServeurs;
 	}
+
+	@OneToMany(mappedBy = "caisse", fetch = FetchType.LAZY)
+	private List<Serveur> serveurs = new ArrayList<>();
+
+	// AJOUTER ces getters/setters
+	public List<Serveur> getServeurs() {
+		return serveurs;
+	}
+
+	public void setServeurs(List<Serveur> serveurs) {
+		this.serveurs = serveurs;
+	}
+
 }

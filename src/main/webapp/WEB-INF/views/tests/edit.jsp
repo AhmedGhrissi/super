@@ -2,7 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <%@ include file="../includes/header.jsp" %>
-
+<link rel="stylesheet" href="/css/global-styles.css">
 <div class="dashboard">
     <div class="page-header">
         <h2>✏️ Modifier le Test</h2>

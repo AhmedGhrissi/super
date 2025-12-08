@@ -14,6 +14,11 @@ import com.example.monitor.model.ResultatsTests;
 public interface ResultatsTestsRepository extends JpaRepository<ResultatsTests, Long> {
 
 	// === MÉTHODES DE BASE PAR DATE ===
+
+	// CORRECTION : Renommer pour éviter les conflits
+	@Query("SELECT r FROM ResultatsTests r WHERE r.dateExecution > :date")
+	List<ResultatsTests> findTestsAfterDate(@Param("date") LocalDateTime date);
+
 	long countByDateExecutionAfter(LocalDateTime date);
 
 	long countBySuccesTrueAndDateExecutionAfter(LocalDateTime date);
@@ -54,8 +59,6 @@ public interface ResultatsTestsRepository extends JpaRepository<ResultatsTests, 
 
 	// === MÉTHODES POUR LE MONITORING ET ALERTES ===
 
-	List<ResultatsTests> findTop10ByOrderByDateExecutionDesc();
-
 	@Query("SELECT r FROM ResultatsTests r WHERE r.succes = false AND r.dateExecution >= :dateDebut "
 			+ "ORDER BY r.dateExecution DESC")
 	List<ResultatsTests> findEchecsRecents(@Param("dateDebut") LocalDateTime dateDebut);
@@ -70,4 +73,56 @@ public interface ResultatsTestsRepository extends JpaRepository<ResultatsTests, 
 
 	@Query("SELECT AVG(r.tempsReponse) FROM ResultatsTests r WHERE r.configTest.caisse.id = :caisseId")
 	Long findTempsReponseMoyenParCaisse(@Param("caisseId") Long caisseId);
+
+	// AJOUTER cette méthode
+	@Query("SELECT r FROM ResultatsTests r ORDER BY r.dateExecution DESC")
+	List<ResultatsTests> findAllOrderByDateExecutionDesc();
+
+	// OU utiliser la méthode Spring Data avec une limite
+	List<ResultatsTests> findFirst10ByOrderByDateExecutionDesc();
+
+	// ... méthodes existantes ...
+
+	// AJOUTER si manquant
+	List<ResultatsTests> findByDateExecutionBetween(LocalDateTime start, LocalDateTime end);
+
+	// CORRECTION : Utiliser le bon nom de champ "tempsReponse" pas "tempsExecution"
+	@Query("SELECT AVG(r.tempsReponse) FROM ResultatsTests r WHERE r.dateExecution >= :date")
+	Double findAverageResponseTimeSince(@Param("date") LocalDateTime date);
+
+	// CORRECTION : Ajouter méthode countByStatut manquante
+	// Note: Votre modèle n'a pas de champ "statut", il a "succes" (boolean)
+	// Utilisez plutôt countBySuccesTrue() et countBySuccesFalse()
+
+	// Pour compatibilité avec le code existant, créez une méthode qui simule
+	// "statut"
+	@Query("SELECT COUNT(r) FROM ResultatsTests r WHERE r.succes = :succes")
+	long countBySuccessStatus(@Param("succes") boolean succes);
+
+	// Derniers tests exécutés
+	List<ResultatsTests> findTop10ByOrderByDateExecutionDesc();
+
+	// CORRECTION : Méthode native pour éviter les problèmes
+	@Query(value = "SELECT AVG(temps_reponse) FROM resultats_tests WHERE date_execution >= :date", nativeQuery = true)
+	Double findAverageResponseTimeNative(@Param("date") LocalDateTime date);
+
+	// NOUVELLE : Méthode pour récupérer les statuts (compatibilité)
+	@Query(value = "SELECT " + "SUM(CASE WHEN succes = true THEN 1 ELSE 0 END) as success_count, "
+			+ "SUM(CASE WHEN succes = false THEN 1 ELSE 0 END) as failed_count "
+			+ "FROM resultats_tests WHERE date_execution >= :date", nativeQuery = true)
+	List<Object[]> getStatsByDate(@Param("date") LocalDateTime date);
+
+	// NOUVELLE : Méthode native pour récupérer les tests après une date
+	@Query(value = "SELECT * FROM resultats_tests WHERE date_execution >= :date", nativeQuery = true)
+	List<ResultatsTests> findTestsAfterDateNative(@Param("date") LocalDateTime date);
+
+	@Override
+	long count(); // Existe déjà dans JpaRepository
+
+	// ⭐⭐ AJOUTEZ CETTE MÉTHODE POUR LES GRAPHIQUES RÉELS :
+	@Query("SELECT FUNCTION('DATE', r.dateExecution), COUNT(r), " + "SUM(CASE WHEN r.succes = true THEN 1 ELSE 0 END) "
+			+ "FROM ResultatsTests r " + "WHERE r.dateExecution >= :startDate "
+			+ "GROUP BY FUNCTION('DATE', r.dateExecution) " + "ORDER BY FUNCTION('DATE', r.dateExecution)")
+	List<Object[]> findDailyStats(@Param("startDate") LocalDateTime startDate);
+
 }

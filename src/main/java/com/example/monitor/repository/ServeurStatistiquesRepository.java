@@ -1,11 +1,11 @@
 package com.example.monitor.repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.example.monitor.model.ServeurStatistiques;
@@ -46,9 +46,14 @@ public interface ServeurStatistiquesRepository extends JpaRepository<ServeurStat
 	@Query("SELECT ss.typeServeur, COUNT(ss) FROM ServeurStatistiques ss GROUP BY ss.typeServeur")
 	List<Object[]> countByTypeServeurGrouped();
 
-	@Query("SELECT ss FROM ServeurStatistiques ss WHERE ss.serveurNom = :serveurNom")
-	Optional<ServeurStatistiques> findByServeurNom1(@Param("serveurNom") String serveurNom);
-
 	// Ajoute cette méthode dans le repository
-	List<ServeurStatistiques> findByDisponibilitePercentLessThan(java.math.BigDecimal seuil);
+	List<ServeurStatistiques> findByDisponibilitePercentLessThan(BigDecimal seuil);
+
+	@Query("SELECT DISTINCT s.typeServeur FROM ServeurStatistiques s")
+	List<String> findAllTypesDistincts();
+
+	// Nouvelle méthode pour les serveurs critiques similaires
+	@Query("SELECT s FROM ServeurStatistiques s WHERE s.typeServeur = :typeServeur AND s.disponibilitePercent < 80.0 ORDER BY s.disponibilitePercent ASC")
+	List<ServeurStatistiques> findServeursCritiquesParType(String typeServeur);
+
 }
