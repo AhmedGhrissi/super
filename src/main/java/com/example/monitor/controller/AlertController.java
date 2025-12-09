@@ -50,17 +50,26 @@ public class AlertController {
 		}
 	}
 
+	// Route pour /alertes/view/ (sans ID) - redirige vers la liste
+	@GetMapping("/view/")
+	public String viewAlerteNoId() {
+		return "redirect:/alertes";
+	}
+
+	// Route pour /alertes/view/{id} (avec ID)
 	@GetMapping("/view/{id}")
 	public String viewAlerte(@PathVariable Long id, Model model) {
 		try {
 			Alert alerte = alertService.findById(id);
 			if (alerte == null) {
-				return "redirect:/alertes?error=not_found";
+				model.addAttribute("error", "Alerte non trouvée");
+				return "alertes/not-found";
 			}
 			model.addAttribute("alerte", alerte);
 			return "alertes/view";
 		} catch (Exception e) {
-			return "redirect:/alertes?error=" + e.getMessage();
+			model.addAttribute("error", "Erreur: " + e.getMessage());
+			return "alertes/error";
 		}
 	}
 
@@ -81,16 +90,12 @@ public class AlertController {
 	@ResponseBody
 	public ResponseEntity<Map<String, Object>> getAlertesStatsApi() {
 		try {
-			// Récupérer les stats en Integer
 			Map<String, Integer> statsInteger = alertService.getStatsAlertes();
-
-			// Convertir en Map<String, Object> pour l'API
 			Map<String, Object> statsObject = new HashMap<>();
 			statsObject.put("critical", statsInteger.getOrDefault("critical", 0));
 			statsObject.put("warning", statsInteger.getOrDefault("warning", 0));
 			statsObject.put("info", statsInteger.getOrDefault("info", 0));
 			statsObject.put("total", statsInteger.getOrDefault("total", 0));
-
 			return ResponseEntity.ok(statsObject);
 		} catch (Exception e) {
 			Map<String, Object> defaultStats = new HashMap<>();
@@ -121,6 +126,31 @@ public class AlertController {
 			return ResponseEntity.ok(Map.of("success", true, "message", "Alerte supprimée"));
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Erreur: " + e.getMessage()));
+		}
+	}
+
+	@GetMapping("/api/alertes")
+	@ResponseBody
+	public ResponseEntity<List<Alert>> getAlertesApi() {
+		try {
+			List<Alert> alertes = alertService.getAllAlertes();
+			return ResponseEntity.ok(alertes);
+		} catch (Exception e) {
+			return ResponseEntity.ok(List.of());
+		}
+	}
+
+	@GetMapping("/api/alertes/{id}")
+	@ResponseBody
+	public ResponseEntity<Alert> getAlerteApi(@PathVariable Long id) {
+		try {
+			Alert alerte = alertService.findById(id);
+			if (alerte == null) {
+				return ResponseEntity.notFound().build();
+			}
+			return ResponseEntity.ok(alerte);
+		} catch (Exception e) {
+			return ResponseEntity.notFound().build();
 		}
 	}
 }
